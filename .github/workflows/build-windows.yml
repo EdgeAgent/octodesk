@@ -1,0 +1,26 @@
+name: Build Windows .exe
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install OctoDesk + PyInstaller
+        run: |
+          pip install --upgrade pip
+          pip install -e . pyinstaller
+      - name: Build onefile .exe
+        run: pyinstaller packaging/octodesk.spec --distpath dist --workpath build/pyi
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: OctoDesk-windows
+          path: dist/OctoDesk.exe
