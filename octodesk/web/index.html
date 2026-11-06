@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OctoDesk — The Kraken Pit</title>
+<style>
+  :root{
+    --deep:#04182b; --mid:#0a2f4a; --teal:#1fd6c1; --teal2:#0fa3a3;
+    --gold:#f5c542; --gold2:#c9930a; --ink:#eaf6ff; --dim:#9db8c9;
+    --danger:#ff5d73; --card:#0b2c44cc;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",system-ui,sans-serif;color:var(--ink);
+       background:linear-gradient(180deg,#06263f 0%,var(--deep) 60%,#020d18 100%);
+       min-height:100vh;overflow-x:hidden}
+  /* ---------- HUD ---------- */
+  #hud{position:sticky;top:0;z-index:50;display:flex;gap:18px;align-items:center;
+       padding:10px 18px;background:#03101dee;border-bottom:2px solid var(--gold2);
+       font-weight:700;flex-wrap:wrap}
+  #hud .brand{font-size:20px;letter-spacing:2px;color:var(--gold)}
+  .hudItem{display:flex;align-items:center;gap:6px;background:#0b2c44;
+           padding:5px 12px;border-radius:999px;border:1px solid #17557c}
+  .coinIcon{width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffe98a,var(--gold) 60%,var(--gold2));
+            display:inline-block;text-align:center;color:#7a5b00;font-size:12px;line-height:18px}
+  .chest{font-size:18px}
+  .flame{color:#ff8c42}
+  #hud .paperTag{margin-left:auto;color:var(--teal);border:1px dashed var(--teal);
+                 padding:4px 10px;border-radius:6px;font-size:12px;letter-spacing:1px}
+  /* ---------- Pit scene ---------- */
+  #pit{position:relative;max-width:1100px;margin:14px auto 0;border-radius:18px;
+       overflow:hidden;border:2px solid #17557c;
+       background:linear-gradient(180deg,#0d4066 0%,#082f4e 45%,#04182b 100%);
+       box-shadow:0 18px 50px #000a}
+  .rays{position:absolute;inset:0;pointer-events:none;opacity:.35;
+        background:linear-gradient(105deg,transparent 40%,#bfeaff33 47%,transparent 55%),
+                   linear-gradient(95deg,transparent 60%,#bfeaff26 68%,transparent 76%)}
+  .bubble{position:absolute;border-radius:50%;background:#cfeeff2e;
+          animation:rise linear infinite;pointer-events:none}
+  @keyframes rise{from{transform:translateY(20px)}to{transform:translateY(-560px)}}
+  .weed{position:absolute;bottom:0;font-size:0;pointer-events:none;opacity:.8}
+  #banner{position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:6;
+          background:#03101de6;border:2px solid var(--gold);color:var(--gold);
+          padding:8px 22px;border-radius:10px;font-size:20px;font-weight:800;
+          letter-spacing:2px;opacity:0;transition:opacity .3s;text-align:center;white-space:nowrap}
+  #banner.show{opacity:1}
+  #speech{position:absolute;z-index:7;max-width:300px;background:#fff;color:#123;
+          border-radius:12px;padding:8px 12px;font-size:13.5px;font-weight:600;
+          box-shadow:0 6px 20px #0009;opacity:0;transition:opacity .25s;pointer-events:none}
+  #speech.show{opacity:1}
+  #stamp{position:absolute;top:44%;left:50%;transform:translate(-50%,-50%) rotate(-8deg);
+         z-index:8;font-size:44px;font-weight:900;letter-spacing:3px;padding:10px 26px;
+         border-radius:12px;opacity:0;pointer-events:none}
+  #stamp.pass{opacity:1;color:#0c3;border:4px solid #0c3;background:#eafff2dd}
+  #stamp.fail{opacity:1;color:var(--danger);border:4px solid var(--danger);background:#fff0f2dd}
+  #ink{position:absolute;inset:0;background:radial-gradient(circle at 50% 55%,#000e 20%,#0009 55%,transparent 78%);
+       opacity:0;pointer-events:none;transition:opacity .5s;z-index:5}
+  #ink.on{opacity:1}
+  .shake{animation:shake .6s}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-10px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(5px)}}
+  .flyCoin{position:absolute;z-index:9;width:22px;height:22px;border-radius:50%;
+           background:radial-gradient(circle at 35% 35%,#ffe98a,var(--gold) 60%,var(--gold2));
+           color:#7a5b00;font-weight:900;text-align:center;line-height:22px;font-size:13px;
+           transition:all 1s ease-in;pointer-events:none}
+  /* Kraken SVG */
+  .tentacle{transform-box:fill-box;transform-origin:50% 0%;animation:sway 4s ease-in-out infinite alternate;cursor:pointer}
+  .tentacle path{stroke-linecap:round;fill:none}
+  .tentacle text{fill:var(--ink);font-size:15px;font-weight:700;paint-order:stroke;stroke:#04182b;stroke-width:3}
+  .tentacle.active path{stroke:var(--gold)!important;filter:drop-shadow(0 0 7px var(--gold))}
+  .tentacle.vs path{stroke:#ff9ff3!important;filter:drop-shadow(0 0 9px #ff9ff3)}
+  @keyframes sway{from{transform:rotate(-1.6deg)}to{transform:rotate(1.6deg)}}
+  #brainGlow{opacity:0;transition:opacity .4s}
+  #brainGlow.on{opacity:1}
+  /* ---------- Controls / panels ---------- */
+  .wrap{max-width:1100px;margin:0 auto;padding:0 14px 40px}
+  #controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:16px 0}
+  #release{font-size:21px;font-weight:900;letter-spacing:1px;color:#231a00;
+           background:linear-gradient(180deg,#ffe98a,var(--gold) 55%,var(--gold2));
+           border:none;border-radius:14px;padding:14px 30px;cursor:pointer;
+           box-shadow:0 6px 0 #8a6600,0 12px 24px #0008}
+  #release:active{transform:translateY(4px);box-shadow:0 2px 0 #8a6600}
+  #release:disabled{filter:grayscale(.6);cursor:wait}
+  select,button.small{font-size:15px;padding:9px 12px;border-radius:9px;border:1px solid #17557c;
+           background:#0b2c44;color:var(--ink);cursor:pointer}
+  label.toggle{font-size:14px;color:var(--dim);display:flex;gap:6px;align-items:center}
+  #ticker{display:flex;gap:16px;overflow-x:auto;padding:9px 12px;background:#03101d;
+          border:1px solid #17557c;border-radius:10px;font-family:ui-monospace,monospace;font-size:13.5px;white-space:nowrap}
+  #ticker b{color:var(--teal)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;margin-top:14px}
+  .card{background:var(--card);border:1px solid #17557c;border-radius:14px;padding:16px}
+  .card h3{margin:0 0 10px;color:var(--gold);letter-spacing:1px;font-size:16px}
+  .card p,.card li{font-size:14px;color:var(--ink)}
+  .dim{color:var(--dim)} .small{font-size:12.5px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  td,th{padding:4px 6px;border-bottom:1px solid #17557c55;text-align:left}
+  input[type=text]{width:100%;padding:9px;border-radius:8px;border:1px solid #17557c;
+                   background:#04182b;color:var(--ink);font-family:ui-monospace,monospace}
+  .verdictList{max-height:300px;overflow:auto}
+  .verdictList div{padding:5px 8px;border-bottom:1px solid #17557c44;font-size:13.5px}
+  /* ---------- Doubling Lab ---------- */
+  #lab{margin-top:26px;background:linear-gradient(180deg,#0b2c44,#062035);
+       border:2px solid var(--gold2);border-radius:16px;padding:20px}
+  #lab h2{margin:0 0 4px;color:var(--gold);letter-spacing:2px}
+  .labGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;margin-top:14px}
+  #ladderValue{font-size:34px;font-weight:900;color:var(--gold)}
+  #coinStack{display:flex;flex-wrap:wrap;gap:3px;min-height:26px;margin-top:8px}
+  #coinStack span{width:20px;height:20px;border-radius:50%;font-size:11px;line-height:20px;
+    text-align:center;color:#7a5b00;font-weight:900;
+    background:radial-gradient(circle at 35% 35%,#ffe98a,var(--gold) 60%,var(--gold2))}
+  #burst{font-size:30px;font-weight:900;color:var(--gold);min-height:38px}
+  .moonBar{position:relative;height:16px;background:#123;border-radius:8px;margin-top:10px}
+  .moonFill{height:100%;background:linear-gradient(90deg,var(--teal2),var(--teal));border-radius:8px;width:0%}
+  .moonMark{position:absolute;top:-4px;bottom:-4px;width:3px;background:var(--gold)}
+  .moonMark::after{content:"🌕 MOON";position:absolute;top:-18px;left:-14px;font-size:11px;color:var(--gold);white-space:nowrap}
+  input[type=range]{width:100%}
+  canvas{width:100%;height:220px;background:#04182b;border:1px solid #17557c;border-radius:10px}
+  .honest{border-left:3px solid var(--gold);padding-left:10px;color:var(--dim);font-size:13px}
+</style>
+</head>
+<body>
+
+<div id="hud">
+  <span class="brand">🐙 OCTODESK</span>
+  <span class="hudItem"><span class="chest">🧰</span><span class="coinIcon">$</span><span id="hudNav">100,000</span></span>
+  <span class="hudItem"><span class="flame">🔥</span><span id="hudStreak">0</span></span>
+  <span class="hudItem">LVL <span id="hudLevel">1</span></span>
+  <span class="hudItem">GAIN <span id="hudGain">+0.00%</span></span>
+  <span class="hudItem" id="hudMode" style="border-color:var(--teal);color:var(--teal)">MODE: PAPER</span>
+  <span class="paperTag" id="paperTag">PAPER · SIMULATED MONEY</span>
+  <button id="killBtn" style="background:#5c0a18;color:#ffb3c0;border:2px solid var(--danger);border-radius:10px;padding:7px 14px;font-weight:900;cursor:pointer">🛑 KILL SWITCH</button>
+</div>
+
+<div id="pit">
+  <div class="rays"></div>
+  <div id="ink"></div>
+  <div id="banner"></div>
+  <div id="speech"></div>
+  <div id="stamp"></div>
+  <svg id="krakenSvg" viewBox="0 0 900 560" width="100%" role="img" aria-label="The Kraken and its eight tentacle agents">
+    <!-- rock -->
+    <ellipse cx="450" cy="520" rx="330" ry="34" fill="#0a2237"/>
+    <ellipse cx="450" cy="508" rx="240" ry="26" fill="#11334f"/>
+    <!-- tentacles (behind head) -->
+    <g class="tentacle" id="tentacle-1"><path d="M385 330 C 300 380, 210 370, 150 440 C 120 475, 90 470, 70 440" stroke="#0fa3a3" stroke-width="17"/><text x="58" y="425">Bull</text></g>
+    <g class="tentacle" id="tentacle-2"><path d="M395 350 C 320 420, 250 440, 185 500 C 155 528, 120 520, 105 495" stroke="#12876f" stroke-width="17"/><text x="86" y="488">Bear</text></g>
+    <g class="tentacle" id="tentacle-3"><path d="M420 365 C 370 450, 320 480, 265 522 C 240 540, 210 532, 200 510" stroke="#1fd6c1" stroke-width="17"/><text x="168" y="510">Momentum</text></g>
+    <g class="tentacle" id="tentacle-4"><path d="M445 372 C 425 460, 400 495, 370 530 C 350 550, 325 545, 318 525" stroke="#14b8a6" stroke-width="17"/><text x="290" y="540">Value</text></g>
+    <g class="tentacle" id="tentacle-5"><path d="M455 372 C 475 460, 500 495, 530 530 C 550 550, 575 545, 582 525" stroke="#14b8a6" stroke-width="17"/><text x="560" y="540">Contrarian</text></g>
+    <g class="tentacle" id="tentacle-6"><path d="M480 365 C 530 450, 580 480, 635 522 C 660 540, 690 532, 700 510" stroke="#1fd6c1" stroke-width="17"/><text x="672" y="510">Sentiment</text></g>
+    <g class="tentacle" id="tentacle-7"><path d="M505 350 C 580 420, 650 440, 715 500 C 745 528, 780 520, 795 495" stroke="#12876f" stroke-width="17"/><text x="762" y="488">News Hawk</text></g>
+    <g class="tentacle" id="tentacle-8"><path d="M515 330 C 600 380, 690 370, 750 440 C 780 475, 810 470, 830 440" stroke="#0fa3a3" stroke-width="17"/><text x="806" y="425">Risk</text></g>
+    <!-- brain -->
+    <g id="brainGlow">
+      <circle cx="450" cy="128" r="46" fill="#f5c542" opacity="0.35"/>
+      <circle cx="450" cy="128" r="30" fill="#ffd964" opacity="0.8"/>
+    </g>
+    <circle cx="450" cy="128" r="24" fill="#e88bb0"/>
+    <path d="M432 118 q9 -8 18 0 M450 132 q9 -8 18 0 M436 140 q7 6 14 1" stroke="#c2608a" stroke-width="3" fill="none"/>
+    <!-- head -->
+    <path d="M450 128 C 545 128, 585 205, 578 292 C 573 355, 520 382, 450 382 C 380 382, 327 355, 322 292 C 315 205, 355 128, 450 128 Z" fill="#17b3a6"/>
+    <path d="M450 128 C 545 128, 585 205, 578 292 C 573 355, 520 382, 450 382 C 380 382, 327 355, 322 292 C 315 205, 355 128, 450 128 Z" fill="url(#sheen)" opacity="0.25"/>
+    <defs><linearGradient id="sheen" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff"/><stop offset="0.5" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient></defs>
+    <!-- eyes -->
+    <circle cx="408" cy="255" r="21" fill="#fff"/><circle cx="408" cy="258" r="10" fill="#06263f"/>
+    <circle cx="492" cy="255" r="21" fill="#fff"/><circle cx="492" cy="258" r="10" fill="#06263f"/>
+    <circle cx="412" cy="250" r="3.5" fill="#fff"/><circle cx="496" cy="250" r="3.5" fill="#fff"/>
+    <!-- beak -->
+    <path id="beak" d="M428 372 L450 402 L472 372 L450 384 Z" fill="#f5c542" stroke="#c9930a" stroke-width="2"/>
+    <text x="450" y="352" text-anchor="middle" fill="#eaf6ff" font-size="16" font-weight="700" style="paint-order:stroke;stroke:#04182b;stroke-width:3">THE KRAKEN</text>
+  </svg>
+  <svg class="weed" style="left:6px" width="60" height="120" viewBox="0 0 60 120"><path d="M15 120 C 5 80, 30 60, 15 20 M35 120 C 28 85, 48 70, 38 30 M50 120 C 45 95, 58 80, 52 50" stroke="#0d5c46" stroke-width="6" fill="none"/></svg>
+  <svg class="weed" style="right:6px" width="60" height="120" viewBox="0 0 60 120"><path d="M15 120 C 5 80, 30 60, 15 20 M35 120 C 28 85, 48 70, 38 30 M50 120 C 45 95, 58 80, 52 50" stroke="#0d5c46" stroke-width="6" fill="none"/></svg>
+</div>
+
+<div class="wrap">
+  <div id="controls">
+    <button id="release">RELEASE THE KRAKEN</button>
+    <select id="speed">
+      <option value="1">🐢 Chill · 1x</option>
+      <option value="2" selected>🐇 Fast · 2x</option>
+      <option value="6">🚀 TURBO</option>
+    </select>
+    <label class="toggle"><input type="checkbox" id="demoToggle"> Demo mode (offline fixture data)</label>
+    <span class="dim small" id="runStatus">The pit is calm. The tentacles are waiting.</span>
+  </div>
+
+  <div id="ticker">Loading prices…</div>
+
+  <div class="grid">
+    <div class="card">
+      <h3>🏆 SCOREBOARD</h3>
+      <table>
+        <tr><td>Paper NAV</td><td><b id="sbNav">—</b></td></tr>
+        <tr><td>Total gain</td><td id="sbGain">—</td></tr>
+        <tr><td>Desk runs</td><td id="sbRuns">—</td></tr>
+        <tr><td>Gate pass rate</td><td id="sbPass">—</td></tr>
+        <tr><td>Best day</td><td id="sbBest">—</td></tr>
+        <tr><td>Treasure (positions)</td><td id="sbPos">—</td></tr>
+      </table>
+      <p class="dim small">All simulated. The chest fills only when the Beak approves.</p>
+    </div>
+    <div class="card">
+      <h3>🗣️ TENTACLE VERDICTS</h3>
+      <div class="verdictList" id="verdicts">
+        <p class="dim">No run yet. Release the Kraken — the verdicts will also be
+        listed here as plain text, scene or no scene.</p>
+      </div>
+      <p class="small dim" id="pinnedCard"></p>
+    </div>
+    <div class="card">
+      <h3>👀 WALLET — WATCH ONLY</h3>
+      <p class="small">Paste a <b>public</b> EVM address. The Kraken reads balances —
+      it never takes keys or seed phrases (it will refuse them, loudly).</p>
+      <input type="text" id="walletAddr" placeholder="0x… (public address only)">
+      <p><button class="small" id="walletBtn">Watch this wallet</button>
+      <span class="small dim" id="walletMsg"></span></p>
+      <div id="walletOut" class="small"></div>
+      <div id="proposals" class="small"></div>
+    </div>
+    <div class="card">
+      <h3>🏦 BROKER — WEALTHSIMPLE VIA SNAPTRADE</h3>
+      <p class="small">The sanctioned route: you connect inside SnapTrade's own
+      portal — <b>your Wealthsimple password goes to the portal only, never to this app.</b></p>
+      <p><button class="small" id="connectBtn">Connect Wealthsimple via SnapTrade</button>
+      <span class="small dim" id="brokerMsg"></span></p>
+      <p class="small">Mode:
+        <button class="small" data-mode="paper">Paper</button>
+        <button class="small" data-mode="connected">Connected</button>
+        <button class="small" data-mode="armed">Arm</button>
+        <span class="dim" id="capInfo"></span></p>
+      <div id="brokerOut" class="small"></div>
+      <div id="brokerProposals" class="small"></div>
+      <p class="small dim">Armed still means: a human confirms <b>every</b> order.
+      Caps and the kill switch always win.</p>
+    </div>
+    <div class="card">
+      <h3>📄 WEALTHSIMPLE CSV — FALLBACK IMPORT</h3>
+      <p class="small">No SnapTrade yet? Export a CSV yourself and drop it here
+      for a read-only holdings view. Never type Wealthsimple credentials anywhere near the Kraken.</p>
+      <input type="file" id="csvFile" accept=".csv">
+      <div id="holdingsOut" class="small"></div>
+    </div>
+  </div>
+
+  <!-- ================= DOUBLING LAB ================= -->
+  <section id="lab">
+    <h2>🧪 THE DOUBLING LAB</h2>
+    <p class="dim" style="margin:0">Exponential growth, played with honestly.
+    <b style="color:var(--gold)">This is math, not a promise.</b></p>
+    <div class="labGrid">
+      <div>
+        <h3 style="color:var(--teal)">THE LADDER — $1, DOUBLED</h3>
+        <div id="ladderValue">$1</div>
+        <div class="small dim">step <span id="ladderStep">0</span> of 20 · doubling crosses $1M at step 20</div>
+        <div id="coinStack"></div>
+        <div id="burst"></div>
+        <button class="small" id="ladderPlay">▶ Play the ladder</button>
+        <p class="honest">1, 2, 4, 8, 16… step 10 is $1,024. Step 20 is $1,048,576.
+        No investment on Earth has ever climbed it on schedule.</p>
+      </div>
+      <div>
+        <h3 style="color:var(--teal)">FOLD TO THE MOON</h3>
+        <p style="font-size:15px">Fold a 0.1&nbsp;mm sheet: <b id="foldCount">0</b> folds</p>
+        <input type="range" id="foldSlider" min="0" max="42" value="0">
+        <p class="small">Thickness: <b id="foldThick">0.1 mm</b><br>
+        Distance if it kept going: <b id="foldKm">0.0000001 km</b></p>
+        <div class="moonBar"><div class="moonFill" id="moonFill"></div>
+          <div class="moonMark" style="left:87.4%"></div></div>
+        <p class="small" id="foldMsg">The Moon sits at 384,400 km. Keep folding.</p>
+        <p class="honest">A real sheet gives up around fold 7 or 8 — the math doesn't.</p>
+      </div>
+      <div>
+        <h3 style="color:var(--teal)">FANTASY vs KRAKEN</h3>
+        <label class="small">Start $ <input type="number" id="fanStart" value="100" style="width:80px"></label>
+        <label class="small">% / week <input type="number" id="fanRate" value="7" style="width:60px"></label>
+        <label class="small">Weeks <input type="number" id="fanWeeks" value="52" style="width:60px"></label>
+        <canvas id="fanChart" width="640" height="220"></canvas>
+        <p class="honest">Gold = the smooth fantasy curve (fixed % every week, guaranteed by nobody).
+        Teal = the Kraken's actual paper NAV, indexed — jagged, because reality is.
+        The math of doubling — not a prediction.</p>
+      </div>
+    </div>
+  </section>
+
+  <p class="dim small" style="margin-top:22px">OctoDesk v0.1.0 · Paper by default — the modes ladder
+  (paper → connected → armed), per-order caps, and a kill switch guard any real order, and a human
+  confirms every one. The app never sees your Wealthsimple password. Ever. No keys, no seeds.
+  Basket selection is classical enumeration standing in
+  for QAOA p=2; no quantum hardware. Persona scores are heuristics, not financial advice.
+  Scene art is original SVG; staging inspired by AI Town's watchable-agent pattern (MIT) —
+  no third-party game assets or code.</p>
+</div>
+
+<script>
+const TENTACLES = ["Bull","Bear","Momentum","Value","Contrarian","Sentiment","News Hawk","Risk"];
+const $ = id => document.getElementById(id);
+let lastRun = null, state = null, pinned = {};
+
+function speedDelay(ms){ return ms / parseFloat($("speed").value); }
+function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+function fmt(n){ return n.toLocaleString("en-US",{maximumFractionDigits:2}); }
+
+/* bubbles in the pit */
+(function(){
+  const pit = $("pit");
+  for(let i=0;i<14;i++){
+    const b = document.createElement("div"); b.className = "bubble";
+    const s = 6 + Math.random()*14;
+    b.style.width = b.style.height = s+"px";
+    b.style.left = (Math.random()*96)+"%"; b.style.bottom = "-30px";
+    b.style.animationDuration = (7+Math.random()*8)+"s";
+    b.style.animationDelay = (Math.random()*8)+"s";
+    pit.appendChild(b);
+  }
+})();
+
+function banner(text){ const b=$("banner"); b.textContent=text; b.classList.add("show"); }
+function hideBanner(){ $("banner").classList.remove("show"); }
+function bubble(tIdx, text){
+  const sp = $("speech"), pit = $("pit");
+  const g = $("tentacle-"+tIdx).getBoundingClientRect(), p = pit.getBoundingClientRect();
+  sp.style.left = Math.min(p.width-320, Math.max(10, g.left-p.left+g.width/2-150))+"px";
+  sp.style.top = Math.max(56, g.top-p.top-64)+"px";
+  sp.textContent = text; sp.classList.add("show");
+}
+function hideBubble(){ $("speech").classList.remove("show"); }
+function clearTentacleFx(){
+  document.querySelectorAll(".tentacle").forEach(t=>t.classList.remove("active","vs"));
+  $("brainGlow").classList.remove("on"); hideBubble();
+}
+function flyCoins(n){
+  const pit = $("pit"), p = pit.getBoundingClientRect();
+  for(let i=0;i<n;i++){
+    const c = document.createElement("div"); c.className="flyCoin"; c.textContent="$";
+    c.style.left = (p.width/2 - 60 + Math.random()*120)+"px"; c.style.top = "300px";
+    pit.appendChild(c);
+    setTimeout(()=>{ c.style.left = "60px"; c.style.top = "8px"; c.style.opacity="0"; }, 30+i*60);
+    setTimeout(()=>c.remove(), 1400);
+  }
+}
+
+async function refreshState(){
+  state = await (await fetch("/api/state")).json();
+  const pf = state.portfolio;
+  $("hudNav").textContent = fmt(pf.nav);
+  $("hudStreak").textContent = pf.streak;
+  $("hudLevel").textContent = pf.level;
+  $("hudGain").textContent = (pf.gain_pct>=0?"+":"")+pf.gain_pct+"%";
+  $("sbNav").textContent = "$"+fmt(pf.nav);
+  $("sbGain").textContent = (pf.gain_pct>=0?"+":"")+pf.gain_pct+"%";
+  $("sbRuns").textContent = pf.runs;
+  $("sbPass").textContent = pf.pass_rate+"%  ("+pf.passes+"/"+pf.runs+")";
+  $("sbBest").textContent = "+"+pf.best_day_pct+"%";
+  const pos = Object.keys(pf.positions);
+  $("sbPos").textContent = pos.length ? pos.map(s=>s+" $"+fmt(pf.positions[s].value)).join(" · ") : "empty chest";
+  $("ticker").innerHTML = Object.entries(state.prices).map(([s,v])=>`<span><b>${s}</b> $${fmt(v)}</span>`).join("");
+  renderWallet(); renderBroker(); drawFantasy();
+}
+
+function renderBroker(){
+  const b = state.broker, t = b.trading;
+  const badge = $("hudMode");
+  badge.textContent = "MODE: "+t.mode.toUpperCase()+(t.killed?" · KILLED":"");
+  badge.style.color = t.mode==="armed" ? "#ff5d73" : (t.mode==="connected" ? "#f5c542" : "#1fd6c1");
+  badge.style.borderColor = badge.style.color;
+  $("paperTag").textContent = t.mode==="paper" ? "PAPER · SIMULATED MONEY" :
+    t.mode==="connected" ? "CONNECTED · READ-ONLY" : "ARMED · HUMAN CONFIRMS EVERY ORDER";
+  $("capInfo").textContent = `caps $${t.max_order_usd}/order · $${t.max_day_usd}/day · spent today $${fmt(t.spent_today)}`;
+  if(!b.configured) $("brokerMsg").textContent = b.note || "";
+  const out = $("brokerOut");
+  if(b.accounts){
+    out.innerHTML = b.accounts.map(a=>`<b>${a.name}</b> ${a.number||""} — $${fmt(a.balance||0)}`).join("<br>")+
+      (b.holdings ? "<br>"+b.holdings.positions.map(p=>`${p.symbol}: ${p.units} @ $${p.price}`).join(" · ") : "");
+  }
+  const bp = $("brokerProposals");
+  if(b.proposals && b.proposals.length){
+    bp.innerHTML = "<b>Broker proposals</b> (from the last gate-passed run):"+
+      b.proposals.map(p=>`<div style="margin-top:6px">BUY ${p.symbol} ≈ $${p.notional} — ${p.reason}
+        ${t.mode==="armed" ? `<button class="small" onclick="placeOrder('${p.proposal_id}','${p.confirm_token}')">✔ CONFIRM ORDER</button>` :
+          `<span class="dim">(arm the app to confirm)</span>`}</div>`).join("");
+  } else bp.innerHTML = "";
+}
+
+async function placeOrder(pid, token){
+  const res = await fetch("/api/place", {method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({proposal_id: pid, token: token})});
+  const data = await res.json();
+  alert(data.ok ? "Order placed: "+(data.order.status||data.order.order_id) : "Refused: "+data.reason);
+  await refreshState();
+}
+
+$("connectBtn").addEventListener("click", async ()=>{
+  $("brokerMsg").textContent = "Opening the SnapTrade portal…";
+  try{
+    const res = await fetch("/api/broker/link", {method:"POST"});
+    const data = await res.json();
+    if(data.login_link) window.open(data.login_link, "_blank");
+    await fetch("/api/broker/accounts");
+    $("brokerMsg").textContent = data.configured ? "Connected via SnapTrade." :
+      "Demo transport (no SnapTrade keys) — showing the shape, not your real account.";
+  }catch(e){ $("brokerMsg").textContent = "Connect failed: "+e.message; }
+  await refreshState();
+});
+
+document.querySelectorAll("[data-mode]").forEach(btn=>{
+  btn.addEventListener("click", async ()=>{
+    const res = await fetch("/api/mode", {method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({mode: btn.dataset.mode})});
+    const data = await res.json();
+    if(!data.ok) alert(data.reason);
+    await refreshState();
+  });
+});
+
+$("killBtn").addEventListener("click", async ()=>{
+  await fetch("/api/kill", {method:"POST"});
+  alert("KILL SWITCH FIRED — mode is PAPER and placement is blocked until it is manually cleared.");
+  await refreshState();
+});
+
+function renderWallet(){
+  const w = state.wallet, out = $("walletOut");
+  if(w.balances){ out.innerHTML = "<b>Watching</b> "+w.watch_address.slice(0,10)+"…<br>"+
+    Object.entries(w.balances).map(([k,v])=>k+": "+v).join(" · "); }
+  else if(w.watch_address){ out.textContent = "Watching "+w.watch_address+(w.error? " — "+w.error:""); }
+  const pr = $("proposals");
+  if(w.proposals && w.proposals.length){
+    pr.innerHTML = "<b>Unsigned proposals</b> (export only — nothing can move funds):"+
+      w.proposals.map(p=>`<div>BUY ${p.asset} ≈ $${p.approx_usd} — <span class="dim">${p.status}</span></div>`).join("");
+  } else pr.innerHTML = "";
+}
+
+function renderVerdicts(run){
+  const v = $("verdicts");
+  let html = "";
+  for(const phase of [["round1","ROUND 1"],["round2","ROUND 2"]]){
+    html += `<div style="color:var(--gold);font-weight:700">${phase[1]}</div>`;
+    for(const name of TENTACLES){
+      const line = run[phase[0]][name];
+      html += `<div data-tentacle="${name}" data-phase="${phase[0]}">🗣️ ${line.line}</div>`;
+      pinned[name+"|"+phase[0]] = line;
+    }
+  }
+  html += `<div style="color:var(--gold);font-weight:700">THE KRAKEN DECIDES</div>`+
+    `<div>Basket: ${run.basket.join(", ")} · energy ${run.basket_energy} (classical enumeration, q=0.40)</div>`+
+    `<div style="color:var(--gold);font-weight:700">THE BEAK JUDGES</div>`+
+    Object.entries(run.gate.metrics).map(([k,m])=>`<div>${k}: ${m.value} / limit ${m.limit} — ${m.ok?"OK":"FAIL"}</div>`).join("")+
+    `<div><b>${run.decision}</b></div>`;
+  v.innerHTML = html;
+  v.querySelectorAll("[data-tentacle]").forEach(el=>{
+    el.style.cursor="pointer";
+    el.onclick = ()=>{ $("pinnedCard").textContent = "Pinned: "+pinned[el.dataset.tentacle+"|"+el.dataset.phase].line; };
+  });
+}
+
+document.querySelectorAll(".tentacle").forEach((g,i)=>{
+  g.addEventListener("click", ()=>{
+    const name = TENTACLES[i];
+    if(lastRun){ $("pinnedCard").textContent = "Pinned: "+lastRun.round2[name].line; bubble(i+1, lastRun.round2[name].line); }
+    else $("pinnedCard").textContent = name+" is ready. Release the Kraken to hear its verdict.";
+  });
+});
+
+async function playback(run){
+  const st = $("stamp"); st.className=""; st.textContent="";
+  $("ink").classList.remove("on"); $("pit").classList.remove("shake");
+  banner("ROUND 1 — THE TENTACLES ARGUE");
+  for(let i=0;i<8;i++){
+    clearTentacleFx();
+    const g = $("tentacle-"+(i+1)); g.classList.add("active");
+    bubble(i+1, run.round1[TENTACLES[i]].line);
+    await sleep(speedDelay(950));
+  }
+  banner("ROUND 2 — POSITIONS HARDEN");
+  for(let i=0;i<8;i++){
+    clearTentacleFx();
+    const g = $("tentacle-"+(i+1)); g.classList.add("active");
+    if(TENTACLES[i]===run.vs.bull || TENTACLES[i]===run.vs.bear) g.classList.add("vs");
+    bubble(i+1, run.round2[TENTACLES[i]].line + (TENTACLES[i]===run.vs.bull?"  ⚔️ VS":(TENTACLES[i]===run.vs.bear?"  ⚔️":"")));
+    await sleep(speedDelay(950));
+  }
+  clearTentacleFx();
+  banner("THE KRAKEN DECIDES");
+  $("brainGlow").classList.add("on");
+  bubble(4, "Basket chosen: "+run.basket.join(", ")+" — now the Beak judges.");
+  await sleep(speedDelay(1600));
+  banner("THE BEAK JUDGES");
+  await sleep(speedDelay(1100));
+  hideBanner(); hideBubble(); $("brainGlow").classList.remove("on");
+  if(run.gate.passed){
+    st.textContent = "GATE PASS"; st.className = "pass"; flyCoins(9);
+  } else {
+    st.textContent = "REJECTED — "+(run.gate.failing||"gate").toUpperCase(); st.className = "fail";
+    $("ink").classList.add("on"); $("pit").classList.add("shake");
+  }
+  await sleep(speedDelay(1400)); st.className=""; $("ink").classList.remove("on");
+}
+
+$("release").addEventListener("click", async ()=>{
+  const btn = $("release"); btn.disabled = true;
+  $("runStatus").textContent = "The Kraken stirs…";
+  try{
+    const res = await fetch("/api/run", {method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({live: !$("demoToggle").checked})});
+    lastRun = await res.json();
+    renderVerdicts(lastRun);
+    await playback(lastRun);
+    $("runStatus").textContent = "Decision: "+lastRun.decision+" · prices: "+lastRun.source;
+  }catch(e){ $("runStatus").textContent = "Run failed: "+e.message; }
+  await refreshState();
+  btn.disabled = false;
+});
+
+$("walletBtn").addEventListener("click", async ()=>{
+  $("walletMsg").textContent = "Asking the ocean…";
+  try{
+    const res = await fetch("/api/wallet", {method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({address: $("walletAddr").value.trim()})});
+    const data = await res.json();
+    if(data.error && !data.watch_address) throw new Error(data.error);
+    $("walletMsg").textContent = data.error || "Watching. Read-only, forever.";
+  }catch(e){ $("walletMsg").textContent = e.message; }
+  await refreshState();
+});
+
+$("csvFile").addEventListener("change", async ev=>{
+  const f = ev.target.files[0]; if(!f) return;
+  const text = await f.text();
+  const res = await fetch("/api/import", {method:"POST", body: text});
+  const data = await res.json();
+  $("holdingsOut").innerHTML = data.error ? data.error :
+    "<b>"+data.rows+" rows · total $"+fmt(data.total_amount)+"</b><br>"+
+    data.holdings.map(h=>h.symbol+": "+h.quantity+" ($"+fmt(h.amount)+")").join("<br>")+
+    "<br><span class='dim'>"+data.note+"</span>";
+});
+
+/* ---------------- Doubling Lab ---------------- */
+$("ladderPlay").addEventListener("click", async ()=>{
+  const btn = $("ladderPlay"); btn.disabled = true;
+  $("coinStack").innerHTML=""; $("burst").textContent="";
+  for(let step=0; step<=20; step++){
+    const val = Math.pow(2, step);
+    $("ladderStep").textContent = step;
+    $("ladderValue").textContent = "$"+val.toLocaleString("en-US");
+    if(step<=10){ const c=document.createElement("span"); c.textContent="$"; $("coinStack").appendChild(c); }
+    if(step===10) $("burst").textContent = "💥 $1,024 — four figures!";
+    if(step===20) $("burst").textContent = "🎉 MILLION! $1,048,576 at step 20";
+    await sleep(speedDelay(650));
+  }
+  btn.disabled = false;
+});
+
+function foldUpdate(){
+  const n = parseInt($("foldSlider").value);
+  const km = 0.1 * Math.pow(2,n) / 1e6;
+  $("foldCount").textContent = n;
+  $("foldThick").textContent = (0.1*Math.pow(2,n)).toExponential(2)+" mm";
+  $("foldKm").textContent = km.toLocaleString("en-US",{maximumFractionDigits:2})+" km";
+  $("moonFill").style.width = Math.min(100, km/439804.65*100)+"%";
+  $("foldMsg").textContent = km >= 384400
+    ? "🌕 PAST THE MOON — "+km.toLocaleString("en-US",{maximumFractionDigits:0})+" km vs the Moon's 384,400 km. 42 folds of pure math."
+    : "The Moon sits at 384,400 km. Keep folding.";
+}
+$("foldSlider").addEventListener("input", foldUpdate); foldUpdate();
+
+function drawFantasy(){
+  const cv = $("fanChart"), ctx = cv.getContext("2d");
+  const start = parseFloat($("fanStart").value)||100, rate = (parseFloat($("fanRate").value)||0)/100,
+        weeks = Math.max(2, parseInt($("fanWeeks").value)||52);
+  ctx.clearRect(0,0,cv.width,cv.height);
+  const fantasy = []; for(let i=0;i<=weeks;i++) fantasy.push(100*Math.pow(1+rate,i));
+  let kraken = [100];
+  if(state && state.portfolio.nav_history.length>1){
+    const h = state.portfolio.nav_history, base = h[0].nav;
+    kraken = h.map(p=>100*p.nav/base);
+  }
+  const pts = Math.max(fantasy.length, kraken.length);
+  const maxV = Math.max(...fantasy, ...kraken)*1.05, minV = 90;
+  const X = i => 30 + (cv.width-45) * i/(pts-1), Y = v => cv.height-24 - (cv.height-44)*((v-minV)/(maxV-minV));
+  ctx.strokeStyle="#17557c"; ctx.beginPath(); ctx.moveTo(30,10); ctx.lineTo(30,cv.height-24); ctx.lineTo(cv.width-10,cv.height-24); ctx.stroke();
+  function line(series, color){ ctx.strokeStyle=color; ctx.lineWidth=2; ctx.beginPath();
+    series.forEach((v,i)=>{ const x=X(i), y=Y(v); i?ctx.lineTo(x,y):ctx.moveTo(x,y); }); ctx.stroke(); }
+  line(fantasy, "#f5c542"); line(kraken, "#1fd6c1");
+  ctx.fillStyle="#f5c542"; ctx.fillText("— FANTASY ("+($("fanRate").value)+"%/wk, smooth, guaranteed by nobody)", 38, 18);
+  ctx.fillStyle="#1fd6c1"; ctx.fillText("— KRAKEN paper NAV, indexed (jagged = real)", 38, 34);
+}
+["fanStart","fanRate","fanWeeks"].forEach(id=>$(id).addEventListener("input", drawFantasy));
+
+refreshState();
+</script>
+</body>
+</html>

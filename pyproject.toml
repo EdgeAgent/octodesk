@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "octodesk"
+version = "0.1.0"
+description = "OctoDesk — Release the Kraken. A playful, paper-only trading-desk bot: a Kraken orchestrator, eight tentacle agents, a QUBO-style basket brain, and a hard risk gate."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Kevin Doherty" }]
+keywords = ["trading-bot", "paper-trading", "multi-agent", "risk-gate", "kraken"]
+dependencies = []
+
+[project.scripts]
+octodesk = "octodesk.cli:main"
+
+[tool.setuptools]
+packages = ["octodesk"]
+
+[tool.setuptools.package-data]
+octodesk = ["web/*.html", "data/*.json"]

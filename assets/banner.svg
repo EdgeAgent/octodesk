@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 280" width="1240" height="280">
+  <rect width="1240" height="280" fill="#04182b"/>
+  <rect width="1240" height="280" fill="none" stroke="#c9930a" stroke-width="4"/>
+  <g transform="translate(38,34) scale(0.883)">
+    <rect width="240" height="240" rx="48" fill="#0a2f4a"/>
+    <g fill="none" stroke="#f5c542" stroke-width="11" stroke-linecap="round">
+      <path d="M78 138 C 55 165, 38 168, 30 148"/>
+      <path d="M95 148 C 80 182, 62 190, 50 172"/>
+      <path d="M112 152 C 104 188, 92 198, 80 184"/>
+      <path d="M128 152 C 136 188, 148 198, 160 184"/>
+      <path d="M145 148 C 160 182, 178 190, 190 172"/>
+      <path d="M162 138 C 185 165, 202 168, 210 148"/>
+    </g>
+    <path d="M120 42 C 168 42, 188 82, 184 122 C 181 152, 152 166, 120 166 C 88 166, 59 152, 56 122 C 52 82, 72 42, 120 42 Z" fill="#f5c542"/>
+    <circle cx="99" cy="112" r="10" fill="#04182b"/>
+    <circle cx="141" cy="112" r="10" fill="#04182b"/>
+    <path d="M108 146 L120 160 L132 146 L120 152 Z" fill="#04182b"/>
+  </g>
+  <text x="300" y="128" font-family="Arial, Helvetica, sans-serif" font-size="84" font-weight="900" letter-spacing="6" fill="#f5c542">OCTODESK</text>
+  <text x="304" y="182" font-family="Arial, Helvetica, sans-serif" font-size="36" font-style="italic" fill="#1fd6c1">Release the Kraken.</text>
+  <text x="304" y="228" font-family="Arial, Helvetica, sans-serif" font-size="22" fill="#9db8c9">Eight tentacles argue. One brain decides. The Beak judges. Paper by default.</text>
+</svg>

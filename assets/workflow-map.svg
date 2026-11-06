@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 340" width="1240" height="340">
+  <rect width="1240" height="340" fill="#04182b"/>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#1fd6c1"/>
+    </marker>
+  </defs>
+  <text x="620" y="38" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700" fill="#f5c542">HOW A RUN WORKS</text>
+
+  <g font-family="Arial, Helvetica, sans-serif">
+    <rect x="30" y="90" width="180" height="110" rx="12" fill="#0a2f4a" stroke="#1fd6c1" stroke-width="2"/>
+    <text x="120" y="128" text-anchor="middle" font-size="19" font-weight="700" fill="#eaf6ff">PRICES</text>
+    <text x="120" y="156" text-anchor="middle" font-size="14" fill="#9db8c9">12 assets</text>
+    <text x="120" y="178" text-anchor="middle" font-size="14" fill="#9db8c9">live or fixture</text>
+
+    <rect x="270" y="90" width="230" height="110" rx="12" fill="#0a2f4a" stroke="#1fd6c1" stroke-width="2"/>
+    <text x="385" y="128" text-anchor="middle" font-size="19" font-weight="700" fill="#eaf6ff">8 TENTACLES DEBATE</text>
+    <text x="385" y="156" text-anchor="middle" font-size="14" fill="#9db8c9">2 rounds of stances</text>
+    <text x="385" y="178" text-anchor="middle" font-size="14" fill="#9db8c9">C = 0.65M + 0.35A</text>
+
+    <rect x="560" y="90" width="230" height="110" rx="12" fill="#0a2f4a" stroke="#f5c542" stroke-width="2"/>
+    <text x="675" y="128" text-anchor="middle" font-size="19" font-weight="700" fill="#eaf6ff">KRAKEN BRAIN</text>
+    <text x="675" y="156" text-anchor="middle" font-size="14" fill="#9db8c9">picks a basket of 4</text>
+    <text x="675" y="178" text-anchor="middle" font-size="14" fill="#9db8c9">QUBO-style, q = 0.40</text>
+
+    <rect x="850" y="90" width="170" height="110" rx="12" fill="#0a2f4a" stroke="#f5c542" stroke-width="2"/>
+    <text x="935" y="128" text-anchor="middle" font-size="19" font-weight="700" fill="#eaf6ff">THE BEAK</text>
+    <text x="935" y="156" text-anchor="middle" font-size="14" fill="#9db8c9">REA risk gate</text>
+    <text x="935" y="178" text-anchor="middle" font-size="14" fill="#9db8c9">var · dd · cap</text>
+
+    <rect x="1060" y="70" width="160" height="66" rx="12" fill="#0d3a24" stroke="#2ecc71" stroke-width="2"/>
+    <text x="1140" y="98" text-anchor="middle" font-size="16" font-weight="700" fill="#eafff2">PAPER FILLS</text>
+    <text x="1140" y="120" text-anchor="middle" font-size="13" fill="#9db8c9">treasure chest</text>
+
+    <rect x="1060" y="164" width="160" height="66" rx="12" fill="#3a0d1c" stroke="#ff5d73" stroke-width="2"/>
+    <text x="1140" y="192" text-anchor="middle" font-size="16" font-weight="700" fill="#fff0f2">INK REJECT</text>
+    <text x="1140" y="214" text-anchor="middle" font-size="13" fill="#9db8c9">failing metric named</text>
+
+    <line x1="210" y1="145" x2="264" y2="145" stroke="#1fd6c1" stroke-width="3" marker-end="url(#arr)"/>
+    <line x1="500" y1="145" x2="554" y2="145" stroke="#1fd6c1" stroke-width="3" marker-end="url(#arr)"/>
+    <line x1="790" y1="145" x2="844" y2="145" stroke="#1fd6c1" stroke-width="3" marker-end="url(#arr)"/>
+    <line x1="1020" y1="128" x2="1054" y2="110" stroke="#2ecc71" stroke-width="3" marker-end="url(#arr)"/>
+    <line x1="1020" y1="162" x2="1054" y2="188" stroke="#ff5d73" stroke-width="3" marker-end="url(#arr)"/>
+
+    <text x="620" y="262" text-anchor="middle" font-size="16" fill="#9db8c9">Confidence &gt;= 0.70 keeps a candidate · variance &lt;= 0.035 · drawdown &lt;= 8% · single asset &lt;= 25%</text>
+    <text x="620" y="292" text-anchor="middle" font-size="16" fill="#f5c542">Paper by default. Real orders only when armed, capped, and confirmed by a human. The Kraken never holds keys.</text>
+  </g>
+</svg>
